@@ -151,8 +151,8 @@ swline[i+1]<-paste("   cd ",currentdir,"; module load R ;   R --no-save --no-res
 
 swline<-c(swline,"","","","#### NonWear from Rdata",paste("   cd ",currentdir,"; module load R ;   R --no-save --no-restore --args  < ",Rline.swFN,"   1  ",nf,"  1",sep="") )
 
-
-catlines<-paste("   cd ",currentdir,"/",writedir,"; cat  ",studyname,"_",Vnames,".data*.csv > All_",studyname,"_",Vnames,".data.csv",sep="") 
+# Replaced cat with xargs and awk to prevent multiple CSV headers in the final merged file.
+catlines <- paste("   cd ", currentdir, "/", writedir,  "; ls ", studyname, "_", Vnames, ".data*.csv | xargs awk 'FNR==1 && NR!=1{next;}{print}' > All_", studyname, "_", Vnames, ".data.csv", sep="")
 
 write(Rline,file= Rline.swFN,ncolumns=1)
 write(swline,file=  swFN,ncolumns=1)
@@ -172,8 +172,8 @@ ggir.datatransform(outputdir,subdir=writedir,studyname, numericID=FALSE,sortByid
 message(paste("workdir=",getwd(),sep="")) 
 ggir.datatransform(outputdir,subdir=writedir,studyname, numericID=FALSE,sortByid="filename",f0=1,f1=9999,epochIn ,epochOut=epochIn,DoubleHour=DoubleHour,mergeVar=2)
  
-
-catlines<-paste("   cd ",currentdir,"/",writedir,"; cat  ",studyname,"_",Vnames,".data*.csv > All_",studyname,"_",Vnames,".data.csv",sep="") 
+# See line 154
+catlines <- paste("   cd ", currentdir, "/", writedir,  "; ls ", studyname, "_", Vnames, ".data*.csv | xargs awk 'FNR==1 && NR!=1{next;}{print}' > All_", studyname, "_", Vnames, ".data.csv", sep="")
 for (i in 1:length(Vnames)) try(system(catlines[i])) 
 }
 
@@ -302,12 +302,14 @@ sh.head<-c("#!/bin/bash",
 
 annoX<-c("#", ifelse(use.cluster,"#","") ,"","","") # slient mode=0~4
 
-swline<-paste( annoX,"   cd ",currentdir,"; module load ",Rversion," ;   R --no-save --no-restore --args  < ",studyname,"_module0.maincall.R  ", 0:4,sep="")  
+# XZ, in our LSF system, everything is on docker so there's no module load
+#swline<-paste( annoX,"   cd ",currentdir,"; module load ",Rversion," ;   R --no-save --no-restore --args  < ",studyname,"_module0.maincall.R  ", 0:4,sep="")  
+swline<-paste( annoX,"   cd ",currentdir,"; Rscript --no-save --no-restore --args  < ",studyname,"_module0.maincall.R  ", 0:4,sep="")  
 
 RversionS<-rep(Rversion,length(outFN4_rmd))
 RversionS[ length(outFN4_rmd)-1]<-"R/3.6.3" #for r.jive package
 shlines<-c( "","","",  
-           paste("   cd ",currentdir,"; module load ",RversionS," ; R -e \"rmarkdown::render(\'",outFN4_rmd,"\'   )\" ",sep="")   
+           paste("   cd ",currentdir,"; Rscript -e \"rmarkdown::render(\'",outFN4_rmd,"\'   )\" ",sep="")   
           )
 swline<-c(sh.head,swline,shlines) 
 
