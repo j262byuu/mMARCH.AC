@@ -302,12 +302,14 @@ sh.head<-c("#!/bin/bash",
 
 annoX<-c("#", ifelse(use.cluster,"#","") ,"","","") # slient mode=0~4
 
-swline<-paste( annoX,"   cd ",currentdir,"; module load ",Rversion," ;   R --no-save --no-restore --args  < ",studyname,"_module0.maincall.R  ", 0:4,sep="")  
+# XZ, in our LSF system, everything is on docker so there's no module load
+#swline<-paste( annoX,"   cd ",currentdir,"; module load ",Rversion," ;   R --no-save --no-restore --args  < ",studyname,"_module0.maincall.R  ", 0:4,sep="")  
+swline<-paste( annoX,"   cd ",currentdir,"; Rscript --no-save --no-restore --args  < ",studyname,"_module0.maincall.R  ", 0:4,sep="")  
 
 RversionS<-rep(Rversion,length(outFN4_rmd))
 RversionS[ length(outFN4_rmd)-1]<-"R/3.6.3" #for r.jive package
 shlines<-c( "","","",  
-           paste("   cd ",currentdir,"; module load ",RversionS," ; R -e \"rmarkdown::render(\'",outFN4_rmd,"\'   )\" ",sep="")   
+           paste("   cd ",currentdir,"; Rscript -e \"rmarkdown::render(\'",outFN4_rmd,"\'   )\" ",sep="")   
           )
 swline<-c(sh.head,swline,shlines) 
 
