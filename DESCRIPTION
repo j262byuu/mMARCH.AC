@@ -21,8 +21,10 @@ Imports:
     refund,
     denseFLMM,  
     dplyr,
-    xlsx,
+    openxlsx,
+    data.table,
     survival,
+    fields, 
     stats,
     tidyr,
     zoo, 
@@ -35,6 +37,7 @@ Imports:
     ActFrag,
     minpack.lm,
     kableExtra,
+    r.jive,
     GGIR
 Depends:
     R (>= 3.6.0) 
