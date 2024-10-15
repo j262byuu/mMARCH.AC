@@ -37,8 +37,36 @@
 #' @export 
 #'
 #'
- 
 
+# I created a custom function to replace write.xlsx. It uses the openxlsx package. While it's not as fast as write_xlsx, it does not need Java.
+write_xlsx <- function(x,
+                       file,
+                       sheetName = "Sheet1",
+                       showNA=FALSE,
+                       col.names = TRUE,
+                       row.names = FALSE,
+                       overwrite = FALSE,
+                       append = FALSE) {
+  if (append) {
+    overwrite <- TRUE
+    wb <- openxlsx::loadWorkbook(file = file)
+  } else {
+    wb <- openxlsx::createWorkbook()
+  }
+  
+  openxlsx::addWorksheet(wb = wb, sheetName = sheetName)
+  openxlsx::writeData(
+    wb = wb,
+    sheet = sheetName,
+    x = x,
+    colNames = col.names,
+    rowNames = row.names
+  )
+  
+  openxlsx::saveWorkbook(wb = wb,
+                         file = file,
+                         overwrite = overwrite)
+}
   
 
 ggir.summary<-function(bindir=NULL, outputdir,studyname, numericID=FALSE,sortByid="filename",subdir="summary",part5FN="WW_L50M125V500_T5A5",QChours.alpha=16, filename2id=NULL, desiredtz="US/Eastern",trace=FALSE){
@@ -170,8 +198,8 @@ p2sum[,"Date"]<-substr(p2sum[,"start_time"],1,10)
 BD<-merge(BD,p2sum[,c(1,3)],by="filename",all=TRUE,sort=F)
 
 
-write.xlsx(BD, file=BDfn, sheetName = "1_fileList",   col.names = TRUE, row.names = FALSE) 
-write.xlsx(ansM, file=BDfn, sheetName = "2_fileSummary",   col.names = TRUE, row.names = FALSE,append=TRUE)
+write_xlsx(BD, file=BDfn, sheetName = "1_fileList",   col.names = TRUE, row.names = FALSE) 
+write_xlsx(ansM, file=BDfn, sheetName = "2_fileSummary",   col.names = TRUE, row.names = FALSE,append=TRUE)
 
  
 ##########################################################################################################  
@@ -217,7 +245,7 @@ length(unique(d[,"newID"]))
 idM<-unique(d[,c("filename","newID")])
 S2<- which(idM[,2] %in% idM[,2][duplicated(idM[,2])]) 
 if (length(S2)>=1) dupIDs<-idM[S2,] else  dupIDs<-"There is no duplicate IDs"
-try(write.xlsx(dupIDs, file=BDfn, sheetName = "3_dupIDs",   col.names = TRUE, row.names = FALSE,append=TRUE))
+try(write_xlsx(dupIDs, file=BDfn, sheetName = "3_dupIDs",   col.names = TRUE, row.names = FALSE,append=TRUE))
 
 DuplicateIDs<-rep("",nrow(BD))
 if (length(S2)>=1) DuplicateIDs[which(BD[,"filename"] %in% dupIDs[,"filename"])]<-"duplicate"
@@ -230,7 +258,7 @@ d.iderror<-d[which( gsub(" ", "", x=d[,1], fixed = TRUE)!=as.character(unlist(d[
 message(typeof(d))
  
 #write.csv(unique(d.iderror[,c(1,2,33)]),file=outFN[2],row.names=F)  
-write.xlsx(unique(d.iderror[,c("id","filename","newID")]), file=BDfn, sheetName = "4_IDerror",   col.names = TRUE, row.names = FALSE,append=TRUE)
+write_xlsx(unique(d.iderror[,c("id","filename","newID")]), file=BDfn, sheetName = "4_IDerror",   col.names = TRUE, row.names = FALSE,append=TRUE)
  
 
 IDerrors<-rep("",nrow(BD))
@@ -275,7 +303,7 @@ if (trace) message(dim(d))
 if (trace) message(length(unique(d[,sortByid])) )
 if (trace) message(tail(unique(d[,sortByid])))
 
-write.xlsx(ansM, file=BDfn, sheetName = "5_NvalidDays",   col.names = TRUE, row.names = FALSE,append=TRUE) 
+write_xlsx(ansM, file=BDfn, sheetName = "5_NvalidDays",   col.names = TRUE, row.names = FALSE,append=TRUE) 
 BD<-merge(BD,ansM[,-1],by="filename",all=TRUE,sort=FALSE)
 
 if (trace) message("end this part")
@@ -315,8 +343,8 @@ barplot(f[,2],xlab=colnames(f)[1],main=paste(nrow(ansM)," samples",sep=""),ylim=
 countD<-mycbind(countD, f)
 # write.table(t(f),file=outFN[5],row.names=T,col.names=F,append=TRUE,quote=F)
 }
- 
-write.xlsx(countD, file=BDfn, sheetName = "6_Ndays_table", showNA=FALSE, col.names = TRUE, row.names = FALSE,append=TRUE)
+ # showNA=FALSE was removed 
+write_xlsx(countD, file=BDfn, sheetName = "6_Ndays_table", col.names = TRUE, row.names = FALSE,append=TRUE)
  
 
 ##########################################################################################################  
@@ -418,9 +446,9 @@ colnames(miss.matrix)[1]<-sortByid
 Scmc<-which(misspattern %in% miss.middle) 
 d.cmc<-d[Scmc.m,]  
 
-
-write.xlsx(miss.matrix, file=BDfn, sheetName = "7_missingPattern", showNA=FALSE, col.names = TRUE, row.names = FALSE,append=TRUE) 
-write.xlsx(sort(table(misspattern),decreasing=TRUE) , file=BDfn, sheetName = "8_missingPattern_table", showNA=FALSE, col.names = TRUE, row.names = FALSE,append=TRUE)
+# showNA=FALSE was removed
+write_xlsx(miss.matrix, file=BDfn, sheetName = "7_missingPattern", col.names = TRUE, row.names = FALSE,append=TRUE) 
+write_xlsx(sort(table(misspattern),decreasing=TRUE) , file=BDfn, sheetName = "8_missingPattern_table", col.names = TRUE, row.names = FALSE,append=TRUE)
 
 
 BD<-merge(BD,miss.matrix,by="filename",all=TRUE,sort=FALSE) 
@@ -428,8 +456,8 @@ BD[,"filename"]
 filename2id
 BD[,"newID"]<-unlist(lapply(as.character(unlist(BD[,"filename"])),filename2id)) 
 
-
-write.xlsx(BD, file=BDfn, sheetName = "9_final", showNA=FALSE, col.names = TRUE, row.names = FALSE,append=TRUE)
+# showNA=FALSE was removed
+write_xlsx(BD, file=BDfn, sheetName = "9_final",  col.names = TRUE, row.names = FALSE,append=TRUE)
 message(dim(BD))
 BD[,"duplicate"]<-BD[,"DuplicateIDs"]
 write.csv(BD, file=paste(studyname, "_samples_remove_temp.csv",sep=""), row.names = FALSE)
@@ -474,7 +502,8 @@ inspect[,"monitor.name"]<-inspect[,"device"]
 inspect[,"sample.frequency.in.Hertz"]<-inspect[,"samplefreq"] 
 inspect[,"Measurement_Period"]<-paste(inspect[,"meas_dur_dys"]*24,"Hours",sep=" ")
 }
-write.xlsx(inspect, file=BDfn, sheetName = "10_deviceInfo", showNA=FALSE, col.names = TRUE, row.names = FALSE,append=TRUE)
+# showNA=FALSE was removed
+write_xlsx(inspect, file=BDfn, sheetName = "10_deviceInfo", col.names = TRUE, row.names = FALSE,append=TRUE)
 
 # In part5, we use  monitor.name,sample.frequency.in.Hertz,"Measurement_Period" columns.
 
