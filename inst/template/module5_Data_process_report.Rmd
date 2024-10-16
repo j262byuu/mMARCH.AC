@@ -70,15 +70,16 @@ RemoveDaySleeper_xxx
 ```{r c1 ,include=FALSE } 
 
 setwd(currentdir)  
-library(xlsx)   
+# Use openxlsx instead of xlsx. Java is no longer required so no more java.lang.OutOfMemoryError.
+library(openxlsx)  
 library(knitr)
 summaryFN1<-paste(currentdir,"/summary/",studyname,"_ggir_output_summary.xlsx",sep="")
 summaryFN2<-paste(currentdir,"/summary/part24daysummary.info.csv",sep="")
 
 sheetName<-c("1_fileList","2_fileSummary","3_dupIDs","4_IDerror","5_NvalidDays","6_Ndays_table","7_missingPattern","8_missingPattern_table","9_final")
  
-  
-D2<-read.xlsx(summaryFN1,head=1,sheetName = sheetName[2])  
+# Changed to openxlsx::read.xlsx
+D2<-openxlsx::read.xlsx(summaryFN1,startRow=1,sheet = sheetName[2])  
 D1<-as.data.frame(cbind(c("GGIR version:","bin files","GGIR folder"),
           c(gsub("X","",colnames(D2)[1] ),bindir,outputdir)))
 colnames(D1)<-c("Variable","Detail")
@@ -86,7 +87,8 @@ D2.story<-paste("For ",studyname," data, there are ",D2[1,4]," unique bin files 
 
 countunique<-function(x){t<-table(gsub(" Hours","",x))
 return(paste(paste(names(t),collapse="/"),"(freq=",paste(t,collapse="/"),")",sep="")) } 
-Device<-read.xlsx(summaryFN1,head=1,sheetName = "10_deviceInfo") 
+# Changed to openxlsx::read.xlsx
+Device<-openxlsx::read.xlsx(summaryFN1,startRow=1,sheet = "10_deviceInfo") 
 if ("Measurement_Period" %in% colnames(Device)) measPeriod<-countunique(Device[,"Measurement_Period"]) else measPeriod<-"unknown"
 Device.story<-paste("The accelerometer data was measured by the ",countunique(Device[,"monitor.name"])," device in ",countunique(Device[,"sample.frequency.in.Hertz"])," Hertz for ", measPeriod," hours.",sep="")
 ```
@@ -135,8 +137,8 @@ kable(daysleeperM,caption="Problem of daysleeper of GGIR")
 # 3. Check duplicate samples
 
 ```{r c1read ,include=FALSE } 
- 
-D3<-read.xlsx(summaryFN1,head=1,sheetName = sheetName[3])  
+# Changed to openxlsx::read.xlsx
+D3<-openxlsx::read.xlsx(summaryFN1,startRow=1,sheet = sheetName[3])  
 if (ncol(D3)>=2) { 
 D3.uids<-unique(D3[,2])
 D3.t<-table(table(D3[,2]))
@@ -162,7 +164,8 @@ Valid day was defined as >=`r QChours.alpha` valid hours. The number of days/mis
   
  
 ```{r c3nvaild, echo=FALSE , warning=F,message=F, fig.width=10, fig.height=10} 
-D9<-read.xlsx(summaryFN1,head=1,sheetName = sheetName[9])   
+# Changed to openxlsx::read.xlsx
+D9<-openxlsx::read.xlsx(summaryFN1,startRow=1,sheet = sheetName[9])
 #dim(D9) ;head(D9)  
 par(mfrow=c(2,2))
 mycol<-c("blue","red","green","pink","yellow")
@@ -268,8 +271,10 @@ Under the  `r paste( currentdir,"/data/",  sep="")` directory,
 ```{r c21ansM , echo=FALSE }  
   
 summaryFN1<-paste(currentdir,"/summary/",studyname,"_ggir_output_summary.xlsx",sep="")
-summaryP2<-read.xlsx( summaryFN1,head=0,sheetName = "2_fileSummary")  
-ggirV<-as.character(gsub("X","",summaryP2[1,1]))  
+# Changed to openxlsx::read.xlsx
+summaryP2<-openxlsx::read.xlsx(summaryFN1,startRow=1,sheet = "2_fileSummary") 
+# The write function in openxlsx does not insert an 'X' in Row 1, Column 1, so gsub is no longer needed.
+ggirV<-as.character(colnames(summaryP2)[1])  
 inFN<-paste(currentdir,"/data/impu.flag_All_",studyname,"_ENMO.data.",epochOut,"s.GGIR",ggirV,".csv",sep="")
 D<-read.csv(inFN,head=1, stringsAsFactors=FALSE) 
 
