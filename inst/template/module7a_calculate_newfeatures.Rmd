@@ -39,7 +39,7 @@ log.multiplier_xxx
 PA.threshold_xxx
 PA.threshold2_xxx
 RemoveDaySleeper_xxx  
-library(xlsx) 
+library(openxlsx)
 setwd(currentdir) 
  
 #  PA.threshold = c(217,645,1811 )   # for 217=<counts<645 philips counts data
@@ -52,8 +52,10 @@ setwd(currentdir)
 #   	1810	499.96095 
 
 summaryFN1<-paste(currentdir,"/summary/",studyname,"_ggir_output_summary.xlsx",sep="")
-summaryP2<-read.xlsx( summaryFN1,head=0,sheetName = "2_fileSummary")  
-ggirV<-as.character(gsub("X","",summaryP2[1,1]))  
+# Changed to openxlsx::read.xlsx
+summaryP2<-openxlsx::read.xlsx(summaryFN1,startRow=1,sheet = "2_fileSummary")  
+# The write function in openxlsx does not insert an 'X' in Row 1, Column 1, so gsub is no longer needed.
+ggirV<-as.character(colnames(summaryP2)[1])  
  
 enmoFN<-paste("./data/impu.flag_All_",studyname,"_ENMO.data.", epochOut,"s.GGIR",ggirV,".csv",sep="")  
 foutFN<-function(x,studyname) paste("module7a_",studyname,"_new_features_page",x,".csv",sep="")  
@@ -74,7 +76,6 @@ M10windowFN<-paste("./data/clean.impu.flag_All_",studyname,"_ENMO.data.",epochOu
 ```{r x1,include=FALSE} 
 # 0a) read data-------------------------- 
 
-library(xlsx)   
 library(knitr) 
 library(dplyr)  # %>%
 library(cosinor)   
