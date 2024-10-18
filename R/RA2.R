@@ -174,7 +174,8 @@ RA_long2 = function(
 #' get_mean_sd_hour(tind=x,  unit2minute=60)
 #' 
 
- 
+# In some extremely rare cases, if someone is a day sleeper, their L5TIME_num/L10TIME_num can go up to 42, so I modified this function
+# Ref: https://github.com/wadpac/GGIR/blob/0e98108b128eeb78defe0d03af9d0e8c04ec33ec/R/g.part5_analyseSegment.R#L312
 get_mean_sd_hour <- function(tind, unit2minute=60, out=c("mean","sd")){
         
         
@@ -189,8 +190,16 @@ get_mean_sd_hour <- function(tind, unit2minute=60, out=c("mean","sd")){
         # change input to minutes data
         if (unit2minute!=1) tind<-tind*unit2minute
         # tind is from 0 to 24 hours. But L5TIME_NN is 12~36
-        if (max(tind,na.rm=TRUE)>24*60) {windowshift<-12*60
-                                         tind<-tind-12*60 } else windowshift<-0   
+      if (max(tind, na.rm = TRUE) > 24 * 60 &
+          max(tind, na.rm = TRUE) <= 36 * 60) {
+        windowshift <- 12 * 60
+        tind <- tind - 12 * 60
+      } else if (max(tind, na.rm = TRUE) > 36 * 60) {
+        windowshift <- 24 * 60
+        tind <- tind - 24 * 60
+      } else {
+        windowshift <- 0
+      } 
        
        
         tmin=0  
